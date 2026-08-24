@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSAV Quiz Multiplayer - Technical & Procurement</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    
+    .quiz-container {
+      width: 100%;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .quiz-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 650px;
+      width: 100%;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .button.secondary {
+      background: #f0f0f0;
+      color: #667eea;
+      margin-top: 10px;
+    }
+    
+    .button.secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .error-message {
+      color: #ff6b6b;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    
+    .success-message {
+      color: #4caf50;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    
+    .room-code {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 10px 0;
+      letter-spacing: 2px;
+    }
+    
+    .lobby-info {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    
+    .participant-list {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .participant-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+    
+    .participant-item:last-child {
+      border-bottom: none;
+    }
+    
+    .participant-item.answered {
+      color: #4caf50;
+      font-weight: 600;
+    }
+    
+    .participant-item.answered::after {
+      content: " ✓";
+      color: #4caf50;
+    }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .question-number {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+    }
+    
+    .timer {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+    }
+    
+    .timer.warning {
+      color: #ff6b6b;
+      animation: pulse 0.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .question-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+    
+    .options {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .option {
+      padding: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .option:hover {
+      border-color: #667eea;
+      background: #f9f7ff;
+    }
+    
+    .option.selected {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .option.disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    
+    .option-letter {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    
+    .option.selected .option-letter {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .results-container {
+      text-align: center;
+    }
+    
+    .results-header {
+      margin-bottom: 30px;
+    }
+    
+    .results-header h2 {
+      font-size: 24px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    
+    .ranking-table thead {
+      background: #f5f5f5;
+      border-bottom: 2px solid #ddd;
+    }
+    
+    .ranking-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .ranking-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: left;
+      font-size: 14px;
+    }
+    
+    .ranking-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    .ranking-position {
+      font-weight: 700;
+      color: #667eea;
+      min-width: 30px;
+    }
+    
+    .score {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f0f0f0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <div class="quiz-box" id="quizBox"></div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDummyKeyForPublicAccess",
+    authDomain: "ssav-quiz-default.firebaseapp.com",
+    databaseURL: "https://ssav-quiz-default-rtdb.firebaseio.com",
+    projectId: "ssav-quiz-default",
+    storageBucket: "ssav-quiz-default.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:0000000000000000"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  
+  const questions = [
+    { q: "According to the Q2 survey result, how do respondents rate day-to-day shore ↔ vessel coordination overall?", options: ["Mostly effective (78%), with very effective as a minority (9%)", "Mostly ineffective, requiring urgent redesign", "Equally split between effective and ineffective", "Not measured in the survey"], correct: 0 },
+    { q: "Per Q7, which category of decision is reported as most frequently delayed?", options: ["Technical decisions", "Client-related decisions", "Crewing decisions (65%)", "Safety-related decisions"], correct: 2 },
+    { q: "What is the minimum shipboard lube oil stock level defined in work instruction PFS-SSAV-OFF-006?", options: ["7,000 litres / 45 days", "10,000 litres / 60 days", "5,000 litres / 30 days", "No minimum is defined — it is assessed case by case"], correct: 0 },
+    { q: "Under PFS-SSAV-OFF-006, what are the validation and processing timeframes once a lube oil requisition is raised?", options: ["Validated within 3 days by the Technical Superintendent; processed within 7 days by Procurement", "Validated within 24 hours; processed within 3 days", "No fixed timeframe is defined", "Validated within 7 days; processed within 3 days"], correct: 0 },
+    { q: "In the end-to-end supply timeline for lube oil, what is the standard controlled lead time from PO placement to base

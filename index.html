@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSAV Quiz - Technical & Procurement</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    
+    .quiz-container {
+      width: 100%;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .quiz-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .button:active {
+      transform: translateY(0);
+    }
+    
+    .button.secondary {
+      background: #f0f0f0;
+      color: #667eea;
+      margin-top: 10px;
+    }
+    
+    .button.secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .lobby-info {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    
+    .participant-list {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .participant-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+    
+    .participant-item:last-child {
+      border-bottom: none;
+    }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .question-number {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+    }
+    
+    .timer {
+      font-size: 18px;
+      font-weight: 700;
+      color: #667eea;
+    }
+    
+    .timer.warning {
+      color: #ff6b6b;
+      animation: pulse 0.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .question-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+    
+    .options {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .option {
+      padding: 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .option:hover {
+      border-color: #667eea;
+      background: #f9f7ff;
+    }
+    
+    .option.selected {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .option-letter {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    
+    .option.selected .option-letter {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .results-container {
+      text-align: center;
+    }
+    
+    .results-header {
+      margin-bottom: 30px;
+    }
+    
+    .results-header h2 {
+      font-size: 24px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    
+    .ranking-table thead {
+      background: #f5f5f5;
+      border-bottom: 2px solid #ddd;
+    }
+    
+    .ranking-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .ranking-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: left;
+      font-size: 14px;
+    }
+    
+    .ranking-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    .ranking-position {
+      font-weight: 700;
+      color: #667eea;
+      min-width: 30px;
+    }
+    
+    .ranking-position.first {
+      font-size: 18px;
+    }
+    
+    .score {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .reset-button {
+      margin-top: 20px;
+    }
+    
+    .error-message {
+      color: #ff6b6b;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    
+    .qr-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+      text-align: center;
+    }
+    
+    .qr-section h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    
+    #qrcode {
+      display: inline-block;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    .room-link {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-size: 12px;
+      word-break: break-all;
+      color: #667eea;
+      font-weight: 600;
+    }
+    
+    .copy-btn {
+      padding: 8px 16px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: #764ba2;
+    }
+    
+    .copy-feedback {
+      font-size: 12px;
+      color: #4caf50;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .copy-feedback.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <div class="quiz-box" id="quizBox"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "According to the Q2 survey result, how do respondents rate day-to-day shore ↔ vessel coordination overall?",
+    options: ["Mostly effective (78%), with very effective as a minority (9%)", "Mostly ineffective, requiring urgent redesign", "Equally split between effective and ineffective", "Not measured in the survey"],
+    correct: 0
+  },
+  {
+    q: "Per Q7, which category of decision is reported as most frequently delayed?",
+    options: ["Technical decisions", "Client-related decisions", "Crewing decisions (65%)", "Safety-related decisions"],
+    correct: 2
+  },
+  {
+    q: "What is the minimum shipboard lube oil stock level defined in work instruction PFS-SSAV-OFF-006?",
+    options: ["7,000 litres / 45 days", "10,000 litres / 60 days", "5,000 litres / 30 days", "No minimum is defined — it is assessed case by case"],
+    correct: 0
+  },
+  {
+    q: "Under PFS-SSAV-OFF-006, what are the validation and processing timeframes once a lube oil requisition is raised?",
+    options: ["Validated within 3 days by the Technical Superintendent; processed within 7 days by Procurement", "Validated within 24 hours; processed within 3 days", "No fixed timeframe is defined", "Validated within 7 days; processed within 3 days"],
+    correct: 0
+  },
+  {
+    q: "In the end-to-end supply timeline for lube oil, what is the standard controlled lead time from PO placement to base warehouse arrival (Phase 1)?",
+    options: ["Over 30 days", "20 to 25 days", "3 to 5 days", "13 to 15 days"],
+    correct: 3
+  },
+  {
+    q: "Which step in the supply timeline marks the point where Supply Chain's direct control ends and external dependencies (client scheduling, weather) take over?",
+    options: ["Step 9 — Onboard Inspection", "Step 4 — Delivery to Base Warehouse", "Step 6 — Staging at Port Base / Petrobras PSV loading", "Step 5 — Warehouse Receiving & Cargo Check"],
+    correct: 2
+  },
+  {
+    q: "Per the RFQ and Technical Deviation Workflow, what must happen before Procurement proceeds with a lower-cost alternative or similar quote?",
+    options: ["Formal Technical Team clearance is required", "Nothing — Procurement can proceed directly if the price is lower", "The vessel Master must verbally approve it", "The Country Head must sign off personally"],
+    correct: 0
+  },
+  {
+    q: "In the requisition case involving the halogen lamp (PO 5670003152), what caused the technical ambiguity?",
+    options: ["The quantity requested was wrong", "The text description and the attached reference picture described two different products (halogen tube text vs. an LED fixture image)", "The supplier substituted the item without notice", "The requisition had no attachments at all"],
+    correct: 1
+  },
+  {
+    q: "According to the Supplier Feedback Form (Appendix H) requirements, who is required to submit feedback for each delivery or service order?",
+    options: ["The supplier itself", "Only the vessel's HSEQ Officer", "Superintendent, Master and Chief Engineer", "Only the Procurement Manager"],
+    correct: 2
+  },
+  {
+    q: "What specific type of feedback does the Appendix H guidance emphasize should not be overlooked?",
+    options: ["Feedback is optional and not tracked", "Only feedback tied to safety incidents", "Only negative feedback / non-conformities", "Both negative and positive feedback, particularly when a supplier performs above expectations"],
+    correct: 3
+  },
+  {
+    q: "Under the Decision Governance Matrix, who is Accountable (A in RACI) for Major Planned Maintenance (dry-docking, UWILD)?",
+    options: ["Vessel SBM", "Technical Manager", "Country Head", "Chief Engineer"],
+    correct: 1
+  },
+  {
+    q: "For Major Planned Maintenance, what is the SLA for issuing the specification and AFE (Authorization for Expenditure)?",
+    options: ["There is no defined SLA", "30 days before the docking window", "6 months before the docking window", "12 months before the docking window"],
+    correct: 3
+  },
+  {
+    q: "Per the Procurement Priority Framework, how many days from RFQ conversion does Priority A (urgent / immediate action) target for issuing the PO?",
+    options: ["29 days", "7 days", "14 days", "3 days"],
+    correct: 1
+  },
+  {
+    q: "Under the Procurement Priority Framework, which server is used for Priority A (urgent) execution versus Priorities B/C/D?",
+    options: ["Server choice is not defined by priority", "Priority A: Brazil Server only; B/C/D: Brazil OR Central Server", "Both use the Central Server exclusively", "Priority A: Central Server only; B/C/D: Brazil Server only"],
+    correct: 1
+  },
+  {
+    q: "In the Third-Party and Contractor Management flow, what must be finalized and pre-approved before a service provider is contracted (per SCM Priority 3)?",
+    options: ["Only the contractor's HSE certificate", "Nothing — scope can be finalized after mobilization", "Only the mobilization date", "Full scope, commercial terms and mobilization logistics"],
+    correct: 3
+  }
+];
+
+const letters = ['A', 'B', 'C', 'D'];
+let state = {
+  phase: 'login',
+  participants: [],
+  currentName: '',
+  nameError: '',
+  currentQuestionIdx: 0,
+  selectedAnswer: null,
+  responses: {},
+  roomId: 'SSAV' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+  sessionActive: false,
+  startTime: null,
+  scores: [],
+  timerInterval: null
+};
+
+function getCurrentUrl() {
+  return window.location.href;
+}
+
+function generateQRCode(url) {
+  const qrContainer = document.getElementById('qrcode');
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: "#667eea",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const feedback = document.getElementById('copyFeedback');
+    if (feedback) {
+      feedback.classList.add('show');
+      setTimeout(() => {
+        feedback.classList.remove('show');
+      }, 2000);
+    }
+  });
+}
+
+function startQuiz() {
+  if (!state.currentName.trim()) {
+    state.nameError = 'Por favor, insira seu nome.';
+    render();
+    return;
+  }
+  
+  state.participants.push(state.currentName.trim());
+  state.responses[state.currentName.trim()] = {
+    answers: new Array(questions.length).fill(null),
+    times: new Array(questions.length).fill(0)
+  };
+  
+  state.phase = 'lobby';
+  state.currentName = '';
+  state.nameError = '';
+  render();
+}
+
+function beginSession() {
+  state.phase = 'quiz';
+  state.currentQuestionIdx = 0;
+  state.startTime = Date.now();
+  state.sessionActive = true;
+  render();
+}
+
+function selectAnswer(optionIdx) {
+  if (!state.sessionActive) return;
+  
+  state.selectedAnswer = optionIdx;
+  setTimeout(() => {
+    nextQuestion();
+  }, 400);
+}
+
+function nextQuestion() {
+  const currentParticipant = state.participants[state.participants.length - 1];
+  const elapsed = Math.round((Date.now() - state.startTime) / 1000);
+  
+  state.responses[currentParticipant].answers[state.currentQuestionIdx] = state.selectedAnswer;
+  state.responses[currentParticipant].times[state.currentQuestionIdx] = elapsed;
+  
+  if (state.currentQuestionIdx < questions.length - 1) {
+    state.currentQuestionIdx++;
+    state.selectedAnswer = null;
+    state.startTime = Date.now();
+    render();
+  } else {
+    calculateResults();
+  }
+}
+
+function calculateResults() {
+  const scores = [];
+  
+  state.participants.forEach(name => {
+    const answers = state.responses[name].answers;
+    const times = state.responses[name].times;
+    
+    let correct = 0;
+    let totalTime = 0;
+    
+    answers.forEach((ans, idx) => {
+      if (ans === questions[idx].correct) {
+        correct++;
+        totalTime += times[idx];
+      }
+    });
+    
+    scores.push({
+      name,
+      score: correct,
+      time: totalTime,
+      percentage: Math.round((correct / questions.length) * 100)
+    });
+  });
+  
+  scores.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.time - b.time;
+  });
+  
+  state.scores = scores;
+  state.phase = 'results';
+  state.sessionActive = false;
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  render();
+}
+
+function resetQuiz() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state = {
+    phase: 'login',
+    participants: [],
+    currentName: '',
+    nameError: '',
+    currentQuestionIdx: 0,
+    selectedAnswer: null,
+    responses: {},
+    roomId: 'SSAV' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+    sessionActive: false,
+    startTime: null,
+    scores: [],
+    timerInterval: null
+  };
+  render();
+}
+
+function render() {
+  const box = document.getElementById('quizBox');
+  
+  if (state.phase === 'login') {
+    box.innerHTML = `
+      <div class="header">
+        <h1>🚢 SSAV Quiz</h1>
+        <p>Technical & Procurement Knowledge Check</p>
+      </div>
+      
+      <div class="form-group">
+        <label>Digite seu nome</label>
+        <input type="text" id="nameInput" placeholder="Seu nome completo" value="${state.currentName}">
+        ${state.nameError ? `<div class="error-message">${state.nameError}</div>` : ''}
+      </div>
+      
+      <button class="button" onclick="startQuizClick()">Entrar no Quiz</button>
+      
+      <div class="qr-section">
+        <h3>Compartilhe o link com os participantes</h3>
+        <div id="qrcode"></div>
+        <div class="room-link" id="roomLink">${getCurrentUrl()}</div>
+        <button class="copy-btn" onclick="copyToClipboard('${getCurrentUrl()}')">Copiar Link</button>
+        <div class="copy-feedback" id="copyFeedback">✓ Link copiado!</div>
+      </div>
+    `;
+    
+    document.getElementById('nameInput').addEventListener('change', (e) => {
+      state.currentName = e.target.value;
+      state.nameError = '';
+    });
+    document.getElementById('nameInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') startQuizClick();
+    });
+    
+    setTimeout(() => {
+      generateQRCode(getCurrentUrl());
+    }, 100);
+  } 
+  else if (state.phase === 'lobby') {
+    box.innerHTML = `
+      <div class="header">
+        <h1>🎯 Sala de Espera</h1>
+        <p>Sala: <strong style="color: #667eea;">${state.roomId}</strong></p>
+      </div>
+      
+      <div class="lobby-info">
+        <p style="font-size: 16px; margin-top: 10px;"><strong>${state.participants.length}</strong> participante(s) inscrito(s)</p>
+      </div>
+      
+      <div class="participant-list">
+        ${state.participants.map(p => `<div class="participant-item">✓ ${p}</div>`).join('')}
+      </div>
+      
+      <button class="button" onclick="beginSessionClick()">Começar Quiz</button>
+      <button class="button secondary" onclick="resetQuizClick()">← Voltar</button>
+    `;
+  }
+  else if (state.phase === 'quiz') {
+    const q = questions[state.currentQuestionIdx];
+    const elapsed = state.startTime ? Math.round((Date.now() - state.startTime) / 1000) : 0;
+    const timeLeft = Math.max(0, 30 - elapsed);
+    const isWarning = timeLeft <= 10;
+    
+    if (timeLeft === 0 && state.selectedAnswer === null) {
+      nextQuestion();
+      return;
+    }
+    
+    box.innerHTML = `
+      <div class="question-header">
+        <span class="question-number">Questão ${state.currentQuestionIdx + 1} de ${questions.length}</span>
+        <span class="timer ${isWarning ? 'warning' : ''}">${timeLeft}s</span>
+      </div>
+      
+      <div class="question-text">${q.q}</div>
+      
+      <div class="options">
+        ${q.options.map((opt, idx) => `
+          <div class="option ${state.selectedAnswer === idx ? 'selected' : ''}" 
+               onclick="selectAnswerClick(${idx})"
+               style="pointer-events: ${state.selectedAnswer !== null ? 'none' : 'auto'}; opacity: ${state.selectedAnswer !== null && state.selectedAnswer !== idx ? '0.5' : '1'};">
+            <span class="option-letter">${letters[idx]}</span>
+            <span>${opt}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    
+    if (state.timerInterval) clearInterval(state.timerInterval);
+    state.timerInterval = setInterval(() => {
+      const newElapsed = Math.round((Date.now() - state.startTime) / 1000);
+      const newTimeLeft = Math.max(0, 30 - newElapsed);
+      
+      if (newTimeLeft === 0 && state.selectedAnswer === null) {
+        clearInterval(state.timerInterval);
+        nextQuestion();
+      } else if (state.phase !== 'quiz') {
+        clearInterval(state.timerInterval);
+      } else {
+        render();
+      }
+    }, 100);
+  }
+  else if (state.phase === 'results') {
+    box.innerHTML = `
+      <div class="results-container">
+        <div class="results-header">
+          <h2>🏆 Ranking Final</h2>
+          <p>Quiz concluído!</p>
+        </div>
+        
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Nome</th>
+              <th>Pontuação</th>
+              <th>Tempo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.scores.map((score, idx) => `
+              <tr>
+                <td class="ranking-position ${idx === 0 ? 'first' : ''}">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1)}</td>
+                <td><strong>${score.name}</strong></td>
+                <td class="score">${score.score}/${questions.length} (${score.percentage}%)</td>
+                <td>${score.time}s</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <button class="button reset-button" onclick="resetQuizClick()">Nova Seção</button>
+      </div>
+    `;
+  }
+}
+
+function startQuizClick() {
+  startQuiz();
+}
+
+function beginSessionClick() {
+  beginSession();
+}
+
+function selectAnswerClick(idx) {
+  selectAnswer(idx);
+}
+
+function resetQuizClick() {
+  resetQuiz();
+}
+
+render();
+</script>
+
+</body>
+</html>

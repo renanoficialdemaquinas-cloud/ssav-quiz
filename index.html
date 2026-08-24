@@ -3,509 +3,396 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SSAV Quiz Multiplayer</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <title>SSAV Quiz</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    
-    .quiz-container {
-      width: 100%;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .quiz-box {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      padding: 40px;
-      max-width: 650px;
-      width: 100%;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    
-    .header h1 {
-      font-size: 28px;
-      color: #667eea;
-      margin-bottom: 10px;
-    }
-    
-    .header p {
-      color: #666;
-      font-size: 14px;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-    }
-    
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .button {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    
-    .button:hover { transform: translateY(-2px); }
-    
-    .button.secondary {
-      background: #f0f0f0;
-      color: #667eea;
-      margin-top: 10px;
-    }
-    
-    .error-message {
-      color: #ff6b6b;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-    
-    .room-code {
-      display: inline-block;
-      background: #667eea;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: 700;
-      margin: 15px 0;
-      letter-spacing: 3px;
-    }
-    
-    .participant-list {
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 20px 0;
-      max-height: 250px;
-      overflow-y: auto;
-    }
-    
-    .participant-item {
-      padding: 8px 0;
-      font-size: 14px;
-      border-bottom: 1px solid #ddd;
-    }
-    
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 40px; max-width: 650px; width: 100%; }
+    h1 { color: #667eea; text-align: center; margin-bottom: 30px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; }
+    input:focus { outline: none; border-color: #667eea; }
+    button { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    button:hover { transform: translateY(-2px); }
+    .divider { text-align: center; margin: 20px 0; color: #999; }
+    .error { color: #ff6b6b; font-size: 13px; margin-top: 8px; }
+    .room-code { background: #667eea; color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 24px; font-weight: 700; margin: 20px 0; letter-spacing: 2px; }
+    .participant-list { background: #f5f5f5; border-radius: 8px; padding: 20px; margin: 20px 0; max-height: 300px; overflow-y: auto; }
+    .participant-item { padding: 10px; border-bottom: 1px solid #ddd; font-size: 14px; }
     .participant-item:last-child { border-bottom: none; }
-    
-    .question-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .timer {
-      font-size: 22px;
-      font-weight: 700;
-      color: #667eea;
-    }
-    
-    .timer.warning {
-      color: #ff6b6b;
-      animation: pulse 0.5s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    
-    .question-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 25px;
-      line-height: 1.5;
-    }
-    
-    .options {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    
-    .option {
-      padding: 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.3s;
-    }
-    
-    .option:hover {
-      border-color: #667eea;
-      background: #f9f7ff;
-    }
-    
-    .option.selected {
-      background: #667eea;
-      color: white;
-      border-color: #667eea;
-    }
-    
-    .option-letter {
-      display: flex;
-      width: 32px;
-      height: 32px;
-      background: #f0f0f0;
-      border-radius: 6px;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-    
-    .option.selected .option-letter {
-      background: rgba(255,255,255,0.3);
-    }
-    
-    .ranking-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
-    }
-    
-    .ranking-table th {
-      background: #f5f5f5;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      border-bottom: 2px solid #ddd;
-    }
-    
-    .ranking-table td {
-      padding: 12px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .rank-position {
-      font-weight: 700;
-      color: #667eea;
-    }
+    .question-section { margin-bottom: 30px; }
+    .timer-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+    .timer { font-size: 24px; font-weight: 700; color: #667eea; }
+    .timer.warning { color: #ff6b6b; animation: pulse 0.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .answered-count { font-size: 12px; color: #999; text-align: center; margin: 15px 0; }
+    .question-text { font-size: 18px; font-weight: 600; color: #333; margin: 20px 0; line-height: 1.5; }
+    .options { display: grid; gap: 12px; }
+    .option { padding: 16px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 15px; display: flex; gap: 12px; transition: all 0.3s; }
+    .option:hover { border-color: #667eea; background: #f9f7ff; }
+    .option.selected { background: #667eea; color: white; border-color: #667eea; }
+    .option-letter { display: flex; width: 32px; height: 32px; background: #f0f0f0; border-radius: 6px; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    .option.selected .option-letter { background: rgba(255,255,255,0.3); }
+    .ranking-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .ranking-table th { background: #f5f5f5; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #ddd; }
+    .ranking-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+    .waiting { text-align: center; color: #999; font-size: 14px; margin: 20px 0; }
+    .btn-secondary { background: #f0f0f0 !important; color: #667eea !important; }
   </style>
 </head>
 <body>
 
-<div class="quiz-container">
-  <div class="quiz-box" id="quizBox"></div>
-</div>
+<div class="container" id="app"></div>
 
 <script>
-const questions = [
+const QUESTIONS = [
   { q: "According to the Q2 survey result, how do respondents rate day-to-day shore ↔ vessel coordination overall?", options: ["Mostly effective (78%), with very effective as a minority (9%)", "Mostly ineffective, requiring urgent redesign", "Equally split between effective and ineffective", "Not measured in the survey"], correct: 0 },
   { q: "Per Q7, which category of decision is reported as most frequently delayed?", options: ["Technical decisions", "Client-related decisions", "Crewing decisions (65%)", "Safety-related decisions"], correct: 2 },
-  { q: "What is the minimum shipboard lube oil stock level defined in work instruction PFS-SSAV-OFF-006?", options: ["7,000 litres / 45 days", "10,000 litres / 60 days", "5,000 litres / 30 days", "No minimum is defined — it is assessed case by case"], correct: 0 },
-  { q: "Under PFS-SSAV-OFF-006, what are the validation and processing timeframes once a lube oil requisition is raised?", options: ["Validated within 3 days by the Technical Superintendent; processed within 7 days by Procurement", "Validated within 24 hours; processed within 3 days", "No fixed timeframe is defined", "Validated within 7 days; processed within 3 days"], correct: 0 },
-  { q: "In the end-to-end supply timeline for lube oil, what is the standard controlled lead time from PO placement to base warehouse arrival (Phase 1)?", options: ["Over 30 days", "20 to 25 days", "3 to 5 days", "13 to 15 days"], correct: 3 },
-  { q: "Which step in the supply timeline marks the point where Supply Chain's direct control ends and external dependencies (client scheduling, weather) take over?", options: ["Step 9 — Onboard Inspection", "Step 4 — Delivery to Base Warehouse", "Step 6 — Staging at Port Base / Petrobras PSV loading", "Step 5 — Warehouse Receiving & Cargo Check"], correct: 2 },
-  { q: "Per the RFQ and Technical Deviation Workflow, what must happen before Procurement proceeds with a lower-cost alternative or similar quote?", options: ["Formal Technical Team clearance is required", "Nothing — Procurement can proceed directly if the price is lower", "The vessel Master must verbally approve it", "The Country Head must sign off personally"], correct: 0 },
-  { q: "In the requisition case involving the halogen lamp (PO 5670003152), what caused the technical ambiguity?", options: ["The quantity requested was wrong", "The text description and the attached reference picture described two different products (halogen tube text vs. an LED fixture image)", "The supplier substituted the item without notice", "The requisition had no attachments at all"], correct: 1 },
-  { q: "According to the Supplier Feedback Form (Appendix H) requirements, who is required to submit feedback for each delivery or service order?", options: ["The supplier itself", "Only the vessel's HSEQ Officer", "Superintendent, Master and Chief Engineer", "Only the Procurement Manager"], correct: 2 },
-  { q: "What specific type of feedback does the Appendix H guidance emphasize should not be overlooked?", options: ["Feedback is optional and not tracked", "Only feedback tied to safety incidents", "Only negative feedback / non-conformities", "Both negative and positive feedback, particularly when a supplier performs above expectations"], correct: 3 },
-  { q: "Under the Decision Governance Matrix, who is Accountable (A in RACI) for Major Planned Maintenance (dry-docking, UWILD)?", options: ["Vessel SBM", "Technical Manager", "Country Head", "Chief Engineer"], correct: 1 },
-  { q: "For Major Planned Maintenance, what is the SLA for issuing the specification and AFE (Authorization for Expenditure)?", options: ["There is no defined SLA", "30 days before the docking window", "6 months before the docking window", "12 months before the docking window"], correct: 3 },
-  { q: "Per the Procurement Priority Framework, how many days from RFQ conversion does Priority A (urgent / immediate action) target for issuing the PO?", options: ["29 days", "7 days", "14 days", "3 days"], correct: 1 },
-  { q: "Under the Procurement Priority Framework, which server is used for Priority A (urgent) execution versus Priorities B/C/D?", options: ["Server choice is not defined by priority", "Priority A: Brazil Server only; B/C/D: Brazil OR Central Server", "Both use the Central Server exclusively", "Priority A: Central Server only; B/C/D: Brazil Server only"], correct: 1 },
-  { q: "In the Third-Party and Contractor Management flow, what must be finalized and pre-approved before a service provider is contracted (per SCM Priority 3)?", options: ["Only the contractor's HSE certificate", "Nothing — scope can be finalized after mobilization", "Only the mobilization date", "Full scope, commercial terms and mobilization logistics"], correct: 3 }
+  { q: "What is the minimum shipboard lube oil stock level defined in work instruction PFS-SSAV-OFF-006?", options: ["7,000 litres / 45 days", "10,000 litres / 60 days", "5,000 litres / 30 days", "No minimum is defined"], correct: 0 },
+  { q: "Under PFS-SSAV-OFF-006, what are the validation and processing timeframes?", options: ["Validated within 3 days; processed within 7 days", "Validated within 24 hours; processed within 3 days", "No fixed timeframe", "Validated within 7 days; processed within 3 days"], correct: 0 },
+  { q: "What is the standard controlled lead time from PO placement to base warehouse arrival (Phase 1)?", options: ["Over 30 days", "20 to 25 days", "3 to 5 days", "13 to 15 days"], correct: 3 },
+  { q: "Which step marks where Supply Chain's control ends?", options: ["Step 9", "Step 4", "Step 6 — Staging at Port Base", "Step 5"], correct: 2 },
+  { q: "What must happen before Procurement proceeds with a lower-cost alternative?", options: ["Formal Technical Team clearance is required", "Nothing", "The Master must approve", "The Country Head must sign"], correct: 0 },
+  { q: "In the halogen lamp case (PO 5670003152), what caused ambiguity?", options: ["Wrong quantity", "Text and picture described different products", "Supplier substituted", "No attachments"], correct: 1 },
+  { q: "Who must submit Supplier Feedback Form (Appendix H)?", options: ["The supplier", "HSEQ Officer", "Superintendent, Master, Chief Engineer", "Procurement Manager"], correct: 2 },
+  { q: "What feedback does Appendix H emphasize?", options: ["Feedback optional", "Only safety incidents", "Only negative feedback", "Both negative and positive feedback"], correct: 3 },
+  { q: "Who is Accountable for Major Planned Maintenance?", options: ["Vessel SBM", "Technical Manager", "Country Head", "Chief Engineer"], correct: 1 },
+  { q: "SLA for Major Maintenance specification and AFE?", options: ["No SLA", "30 days", "6 months", "12 months before docking"], correct: 3 },
+  { q: "Priority A (urgent) targets how many days for PO?", options: ["29 days", "7 days", "14 days", "3 days"], correct: 1 },
+  { q: "Which server for Priority A vs B/C/D?", options: ["No difference", "Priority A: Brazil only; B/C/D: Brazil OR Central", "Central only", "Priority A: Central only"], correct: 1 },
+  { q: "What must be finalized before contracting (SCM Priority 3)?", options: ["HSE certificate", "Nothing", "Mobilization date", "Full scope, terms, logistics"], correct: 3 }
 ];
 
-const letters = ['A', 'B', 'C', 'D'];
-let state = {
+const LETTERS = ['A', 'B', 'C', 'D'];
+let STATE = {
   phase: 'join',
   name: '',
   roomCode: '',
   userId: 'user_' + Math.random().toString(36).substr(2, 9),
   isHost: false,
   error: '',
-  questIdx: 0,
-  selected: null,
+  currentQuestion: 0,
+  selectedAnswer: null,
   answered: false,
-  timer: 0
+  startTime: null
 };
 
 function getRoom() {
   try {
-    const room = localStorage.getItem('ssav_room_' + state.roomCode);
-    return room ? JSON.parse(room) : null;
-  } catch {
+    const data = localStorage.getItem('room_' + STATE.roomCode);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error('Error getting room:', e);
     return null;
   }
 }
 
 function saveRoom(room) {
-  localStorage.setItem('ssav_room_' + state.roomCode, JSON.stringify(room));
-  broadcastUpdate();
-}
-
-function broadcastUpdate() {
-  if (window.BroadcastChannel) {
-    try {
-      new BroadcastChannel('ssav-quiz').postMessage({type: 'update', room: state.roomCode});
-    } catch (e) {}
-  }
-  window.addEventListener('storage', () => render());
+  localStorage.setItem('room_' + STATE.roomCode, JSON.stringify(room));
 }
 
 function createRoom() {
-  const n = document.getElementById('nameInput').value.trim();
-  if (!n) { state.error = 'Digite seu nome'; render(); return; }
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) {
+    STATE.error = 'Digite seu nome';
+    render();
+    return;
+  }
   
-  state.name = n;
-  state.roomCode = 'SSAV' + Math.random().toString(36).substr(2, 8).toUpperCase();
-  state.isHost = true;
+  STATE.name = name;
+  STATE.roomCode = 'SSAV' + Math.random().toString(36).substr(2, 8).toUpperCase();
+  STATE.isHost = true;
   
   const room = {
-    code: state.roomCode,
+    code: STATE.roomCode,
     active: false,
-    questIdx: 0,
+    currentQuestion: 0,
     startTime: 0,
-    participants: {
-      [state.userId]: { name: n, answered: false, correct: 0 }
-    }
+    participants: {}
+  };
+  
+  room.participants[STATE.userId] = {
+    name: name,
+    answered: false,
+    correct: 0
   };
   
   saveRoom(room);
-  state.phase = 'lobby';
+  STATE.phase = 'lobby';
+  STATE.error = '';
   render();
 }
 
 function joinRoom() {
-  const n = document.getElementById('nameInput').value.trim();
-  const c = document.getElementById('codeInput').value.toUpperCase().trim();
+  const name = document.getElementById('nameInput').value.trim();
+  const code = document.getElementById('codeInput').value.toUpperCase().trim();
   
-  if (!n) { state.error = 'Digite seu nome'; render(); return; }
-  if (!c) { state.error = 'Digite o código'; render(); return; }
+  if (!name) {
+    STATE.error = 'Digite seu nome';
+    render();
+    return;
+  }
+  
+  if (!code) {
+    STATE.error = 'Digite o código da sala';
+    render();
+    return;
+  }
   
   const room = getRoom();
-  if (!room) { state.error = 'Sala não existe'; render(); return; }
+  if (!room) {
+    STATE.error = 'Código inválido';
+    render();
+    return;
+  }
   
-  state.name = n;
-  state.roomCode = c;
-  state.isHost = false;
-  room.participants[state.userId] = { name: n, answered: false, correct: 0 };
+  STATE.name = name;
+  STATE.roomCode = code;
+  STATE.isHost = false;
+  room.participants[STATE.userId] = {
+    name: name,
+    answered: false,
+    correct: 0
+  };
+  
   saveRoom(room);
-  state.phase = 'lobby';
+  STATE.phase = 'lobby';
+  STATE.error = '';
   render();
 }
 
 function startQuiz() {
-  if (!state.isHost) return;
+  if (!STATE.isHost) return;
+  
   const room = getRoom();
   room.active = true;
-  room.questIdx = 0;
+  room.currentQuestion = 0;
   room.startTime = Date.now();
   saveRoom(room);
+  STATE.startTime = Date.now();
+  STATE.phase = 'quiz';
+  render();
 }
 
-function submitAnswer(idx) {
-  if (state.answered || !state.isActive) return;
+function submitAnswer(index) {
+  if (STATE.answered) return;
   
-  state.selected = idx;
-  state.answered = true;
+  STATE.selectedAnswer = index;
+  STATE.answered = true;
   
   const room = getRoom();
-  const correct = idx === questions[room.questIdx].correct ? 1 : 0;
-  room.participants[state.userId].answered = true;
-  room.participants[state.userId].correct += correct;
+  const question = QUESTIONS[room.currentQuestion];
+  const isCorrect = index === question.correct ? 1 : 0;
+  
+  room.participants[STATE.userId].answered = true;
+  room.participants[STATE.userId].correct += isCorrect;
   saveRoom(room);
   
   render();
-  setTimeout(() => { nextQuestion(); }, 2000);
+  
+  setTimeout(() => {
+    nextQuestion();
+  }, 2000);
 }
 
 function nextQuestion() {
-  if (!state.isHost) return;
+  if (!STATE.isHost) return;
+  
   const room = getRoom();
   
-  if (room.questIdx < questions.length - 1) {
-    room.questIdx++;
+  if (room.currentQuestion < QUESTIONS.length - 1) {
+    room.currentQuestion++;
     room.startTime = Date.now();
-    Object.keys(room.participants).forEach(uid => {
-      room.participants[uid].answered = false;
+    
+    Object.values(room.participants).forEach(p => {
+      p.answered = false;
     });
+    
     saveRoom(room);
-    state.questIdx = room.questIdx;
-    state.selected = null;
-    state.answered = false;
+    STATE.currentQuestion = room.currentQuestion;
+    STATE.selectedAnswer = null;
+    STATE.answered = false;
+    STATE.startTime = Date.now();
   } else {
     room.active = false;
     saveRoom(room);
-    state.phase = 'results';
+    STATE.phase = 'results';
   }
+  
   render();
 }
 
 function resetSession() {
-  if (!state.isHost) return;
-  localStorage.removeItem('ssav_room_' + state.roomCode);
-  state = { ...state, phase: 'join', roomCode: '', name: '', selected: null, answered: false };
+  if (!STATE.isHost) return;
+  localStorage.removeItem('room_' + STATE.roomCode);
+  STATE.phase = 'join';
+  STATE.roomCode = '';
+  STATE.name = '';
+  STATE.selectedAnswer = null;
+  STATE.answered = false;
+  STATE.error = '';
   render();
 }
 
 function leaveRoom() {
-  state.phase = 'join';
-  state.roomCode = '';
-  state.name = '';
+  STATE.phase = 'join';
+  STATE.roomCode = '';
+  STATE.name = '';
+  STATE.error = '';
   render();
 }
 
-function render() {
-  const room = state.roomCode ? getRoom() : null;
-  if (room) {
-    state.questIdx = room.questIdx;
+function checkRoomStatus() {
+  if (!STATE.roomCode) return;
+  
+  const room = getRoom();
+  if (!room) return;
+  
+  STATE.currentQuestion = room.currentQuestion;
+  
+  if (room.active && STATE.phase === 'lobby') {
+    STATE.phase = 'quiz';
+    STATE.startTime = Date.now();
+    STATE.selectedAnswer = null;
+    STATE.answered = false;
   }
   
-  const box = document.getElementById('quizBox');
+  if (!room.active && STATE.phase === 'quiz' && STATE.currentQuestion >= QUESTIONS.length) {
+    STATE.phase = 'results';
+  }
+}
+
+function render() {
+  checkRoomStatus();
   
-  if (state.phase === 'join') {
-    box.innerHTML = `
-      <div class="header"><h1>🚢 SSAV Quiz</h1><p>Technical & Procurement</p></div>
+  const room = STATE.roomCode ? getRoom() : null;
+  const app = document.getElementById('app');
+  
+  if (STATE.phase === 'join') {
+    app.innerHTML = `
+      <h1>🚢 SSAV Quiz</h1>
+      <p style="text-align: center; color: #666; margin-bottom: 30px;">Technical & Procurement Knowledge Check</p>
+      
       <div class="form-group">
         <label>Seu Nome</label>
-        <input type="text" id="nameInput" placeholder="Digite seu nome">
+        <input type="text" id="nameInput" placeholder="Digite seu nome completo">
       </div>
-      <button class="button" onclick="createRoom()">Criar Sala</button>
-      <div style="margin: 20px 0; text-align: center; font-size: 12px; color: #666;">OU</div>
+      
+      <button onclick="createRoom()">Criar Sala</button>
+      
+      <div class="divider">OU</div>
+      
       <div class="form-group">
         <label>Código da Sala</label>
         <input type="text" id="codeInput" placeholder="Ex: SSAV1234" maxlength="20">
-        ${state.error ? `<div class="error-message">${state.error}</div>` : ''}
       </div>
-      <button class="button" onclick="joinRoom()">Entrar</button>
+      
+      ${STATE.error ? `<div class="error">${STATE.error}</div>` : ''}
+      
+      <button onclick="joinRoom()">Entrar na Sala</button>
     `;
-  } else if (state.phase === 'lobby' && room) {
-    const plist = Object.values(room.participants).map(p => `<div class="participant-item">✓ ${p.name}</div>`).join('');
-    box.innerHTML = `
-      <div class="header">
-        <h1>🎯 Sala</h1>
-        <div class="room-code">${state.roomCode}</div>
-        <p>${Object.keys(room.participants).length} participante(s)</p>
+  } else if (STATE.phase === 'lobby' && room) {
+    const participantList = Object.values(room.participants).map(p => `<div class="participant-item">✓ ${p.name}</div>`).join('');
+    
+    app.innerHTML = `
+      <h1>🎯 Sala</h1>
+      <div class="room-code">${STATE.roomCode}</div>
+      <p style="text-align: center; color: #666;">${Object.keys(room.participants).length} participante(s) conectado(s)</p>
+      
+      <div class="participant-list">
+        ${participantList}
       </div>
-      <div class="participant-list">${plist}</div>
-      ${state.isHost ? 
-        `<button class="button" onclick="startQuiz()">Iniciar Quiz</button>
-         <button class="button secondary" onclick="leaveRoom()">Fechar</button>` :
-        `<div style="text-align: center; color: #999; font-size: 12px; margin: 20px 0;">⏳ Aguardando host iniciar...</div>
-         <button class="button secondary" onclick="leaveRoom()">Sair</button>`
-      }
+      
+      ${STATE.isHost ? `
+        <button onclick="startQuiz()">Iniciar Quiz</button>
+        <button class="btn-secondary" onclick="leaveRoom()">Fechar Sala</button>
+      ` : `
+        <div class="waiting">⏳ Aguardando o host iniciar o quiz...</div>
+        <button class="btn-secondary" onclick="leaveRoom()">Sair da Sala</button>
+      `}
     `;
-  } else if (state.phase === 'quiz' && room) {
-    const q = questions[room.questIdx];
-    const elapsed = Math.round((Date.now() - room.startTime) / 1000);
+  } else if (STATE.phase === 'quiz' && room) {
+    const q = QUESTIONS[room.currentQuestion];
+    const elapsed = Math.round((Date.now() - STATE.startTime) / 1000);
     const timeLeft = Math.max(0, 30 - elapsed);
-    const answered = Object.values(room.participants).filter(p => p.answered).length;
+    const answeredCount = Object.values(room.participants).filter(p => p.answered).length;
     const isWarning = timeLeft <= 10;
     
-    if (timeLeft === 0 && !state.answered && state.isHost) {
-      setTimeout(() => { nextQuestion(); }, 100);
+    if (timeLeft === 0 && !STATE.answered && STATE.isHost) {
+      setTimeout(() => nextQuestion(), 100);
     }
     
-    const opts = q.options.map((o, i) => `
-      <div class="option ${state.selected === i ? 'selected' : ''}" onclick="submitAnswer(${i})" style="pointer-events: ${state.answered ? 'none' : 'auto'}; opacity: ${state.answered && state.selected !== i ? '0.5' : '1'};">
-        <span class="option-letter">${letters[i]}</span>
-        <span>${o}</span>
+    const optionsHtml = q.options.map((option, index) => `
+      <div class="option ${STATE.selectedAnswer === index ? 'selected' : ''}" 
+           onclick="submitAnswer(${index})"
+           style="pointer-events: ${STATE.answered ? 'none' : 'auto'}; opacity: ${STATE.answered && STATE.selectedAnswer !== index ? '0.5' : '1'};">
+        <span class="option-letter">${LETTERS[index]}</span>
+        <span>${option}</span>
       </div>
     `).join('');
     
-    box.innerHTML = `
-      <div class="question-header">
-        <span>Q${room.questIdx + 1}/${questions.length}</span>
+    app.innerHTML = `
+      <div class="timer-section">
+        <span>Questão ${room.currentQuestion + 1} de ${QUESTIONS.length}</span>
         <span class="timer ${isWarning ? 'warning' : ''}">${timeLeft}s</span>
       </div>
-      <div style="text-align: center; font-size: 12px; color: #999; margin-bottom: 15px;">${answered}/${Object.keys(room.participants).length} responderam</div>
+      
+      <div class="answered-count">${answeredCount}/${Object.keys(room.participants).length} participantes responderam</div>
+      
       <div class="question-text">${q.q}</div>
-      <div class="options">${opts}</div>
+      
+      <div class="options">
+        ${optionsHtml}
+      </div>
     `;
     
-    setTimeout(() => { render(); }, 100);
-  } else if (state.phase === 'results' && room) {
-    const results = Object.entries(room.participants)
-      .map(([uid, p]) => ({ name: p.name, correct: p.correct, time: Math.random() * 300 + 60 }))
-      .sort((a, b) => b.correct - a.correct || a.time - b.time);
+    setTimeout(() => render(), 100);
+  } else if (STATE.phase === 'results' && room) {
+    const results = Object.values(room.participants)
+      .sort((a, b) => b.correct - a.correct)
+      .map((p, index) => `
+        <tr>
+          <td style="font-weight: 700; color: #667eea;">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1)}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.correct}/${QUESTIONS.length}</td>
+        </tr>
+      `).join('');
     
-    const rows = results.map((r, i) => `
-      <tr>
-        <td class="rank-position">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)}</td>
-        <td><strong>${r.name}</strong></td>
-        <td>${r.correct}/${questions.length}</td>
-        <td>${Math.round(r.time)}s</td>
-      </tr>
-    `).join('');
-    
-    box.innerHTML = `
-      <div style="text-align: center;">
-        <h2 style="color: #667eea; margin-bottom: 20px;">🏆 Ranking Final</h2>
-        <table class="ranking-table">
-          <thead><tr><th>Pos</th><th>Nome</th><th>Acertos</th><th>Tempo</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        ${state.isHost ? 
-          `<button class="button" onclick="resetSession()">Nova Seção</button>` :
-          `<button class="button" onclick="leaveRoom()">Sair</button>`
-        }
-      </div>
+    app.innerHTML = `
+      <h1 style="text-align: center;">🏆 Ranking Final</h1>
+      
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th>Posição</th>
+            <th>Nome</th>
+            <th>Acertos</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results}
+        </tbody>
+      </table>
+      
+      ${STATE.isHost ? `
+        <button onclick="resetSession()">Nova Seção</button>
+      ` : `
+        <button class="btn-secondary" onclick="leaveRoom()">Sair</button>
+      `}
     `;
   }
   
-  // Listener para mudanças em outras abas
-  window.addEventListener('storage', () => {
-    if (state.roomCode && state.phase !== 'results') {
-      const room = getRoom();
-      if (room && room.active !== (state.phase === 'quiz')) {
-        state.phase = room.active ? 'quiz' : 'lobby';
-        state.questIdx = room.questIdx;
-        render();
-      }
-    }
-  });
+  // Auto-update para outras abas
+  setInterval(checkRoomStatus, 500);
 }
 
+// Listener para sincronização com outras abas
+window.addEventListener('storage', () => {
+  render();
+});
+
+// Render inicial
 render();
 </script>
 
